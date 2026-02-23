@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-cyber-green: #00ff41;
+  --color-cyber-dark: #0a0a0a;
+  --color-cyber-gray: #1a1a1a;
+}
+
+body {
+  background-color: var(--color-cyber-dark);
+  color: var(--color-cyber-green);
+  font-family: var(--font-mono);
+  overflow: hidden;
+}
+
+/* Custom scrollbar for cyber look */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-cyber-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-cyber-green);
+  border-radius: 2px;
+}
+
+.glitch-text {
+  text-shadow: 0 0 5px var(--color-cyber-green);
+}
+
+.panel-border {
+  border: 1px solid rgba(0, 255, 65, 0.2);
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scanline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(0, 255, 65, 0.05);
+  z-index: 100;
+  pointer-events: none;
+  animation: scanline 8s linear infinite;
+}
+
