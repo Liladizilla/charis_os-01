@@ -3,12 +3,34 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import os from "os";
-import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import Database from "better-sqlite3";
 
 dotenv.config();
 
+const db = new Database("adizilla.db");
+
+// Initialize VFS table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS vfs (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    content TEXT,
+    parentId TEXT,
+    owner TEXT NOT NULL,
+    permissions TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL
+  );
+  
+  -- Insert root directory if not exists
+  INSERT OR IGNORE INTO vfs (id, name, type, parentId, owner, permissions, createdAt, updatedAt)
+  VALUES ('root', '/', 'directory', NULL, 'root', 'rwx------', datetime('now'), datetime('now'));
+`);
+
 const app = express();
+app.use(express.json());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -80,6 +102,35 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/events", (req, res) => {
   res.json(events);
+});
+
+// VFS Endpoints
+app.get("/api/vfs", (req, res) => {
+  const nodes = db.prepare("SELECT * FROM vfs").all();
+  res.json(nodes);
+});
+
+app.post("/api/vfs", (req, res) => {
+  const { id, name, type, content, parentId, owner, permissions } = req.body;
+  const now = new Date().toISOString();
+  try {
+    db.prepare(`
+      INSERT INTO vfs (id, name, type, content, parentId, owner, permissions, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, name, type, content, parentId, owner, permissions, now, now);
+    res.json({ success: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/api/vfs/:id", (req, res) => {
+  try {
+    db.prepare("DELETE FROM vfs WHERE id = ?").run(req.params.id);
+    res.json({ success: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Vite middleware for development
